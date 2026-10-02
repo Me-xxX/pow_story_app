@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>魔法使いの約束 テキストノート</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#eef3f8;--card:#fff;--text:#2b3344;--sub:#6b7686;--line:#d5dde8;--bub:#5c9ed6;--bubt:#fff;--mono:#fff;--gold:#c8a95a;--acc:#2f6fb0;--mark:#ffe58a;--danger:#c0392b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161d;--card:#1b222c;--text:#e6ebf2;--sub:#97a3b4;--line:#2c3644;--bub:#3f78ad;--mono:#222b37;--acc:#7db4ea;--mark:#6b5a1c}}
+:root[data-theme="dark"]{--bg:#12161d;--card:#1b222c;--text:#e6ebf2;--sub:#97a3b4;--line:#2c3644;--bub:#3f78ad;--mono:#222b37;--acc:#7db4ea;--mark:#6b5a1c}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;line-height:1.6}
+main{max-width:640px;margin:0 auto;padding:10px 12px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:10px}
+input,select,textarea,button{font:inherit;color:inherit}
+input[type=text],input[type=search],select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px}
+textarea{min-height:84px;resize:vertical}
+button{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:7px 12px;cursor:pointer}
+button.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+button.dng{color:var(--danger);border-color:var(--danger)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.row2{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.row2>*{flex:1}.row2>button{flex:0 0 auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px 4px;padding:4px 0 8px}
+.chip{flex:0 0 auto;width:56px;text-align:center;background:none;border:0;padding:0;font-size:10px;color:var(--sub)}
+.chip .av{width:40px;height:40px;margin:0 auto 2px;border:2px solid transparent}
+.chip.on .av{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
+.chip.on{color:var(--acc);font-weight:700}
+.chip span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.av{width:44px;height:44px;border-radius:50%;object-fit:cover;background:#cfe2f5;display:block;flex:0 0 auto}
+.av.ph{display:flex;align-items:center;justify-content:center;color:#2f6fb0;font-weight:700}
+.now{font-size:13px;color:var(--sub);margin:2px 0 6px}
+.now b{color:var(--text)}
+.ch{text-align:center;padding:14px 0 12px;margin-bottom:8px;border-top:2px solid var(--gold);border-bottom:2px solid var(--gold)}
+.ch small{display:block;color:var(--sub);font-size:12px}
+.ch h2{margin:2px 0 0;font-size:19px;letter-spacing:.04em}
+.ln{display:flex;gap:10px;margin:14px 0;align-items:flex-start;cursor:pointer}
+.ln .nm{font-weight:700;font-size:14px;margin-bottom:3px}
+.ln .body{flex:1;min-width:0}
+.bub{position:relative;background:var(--bub);color:var(--bubt);border-radius:12px;padding:10px 14px;white-space:pre-wrap;word-break:break-word;font-weight:500}
+.bub::before{content:"";position:absolute;left:-8px;top:14px;border:6px solid transparent;border-right:8px solid var(--bub);border-left:0}
+.ln.mono{display:block;margin:14px 0}
+.ln.mono .bub{background:var(--mono);color:var(--text);border:1px solid var(--line);text-align:center;font-weight:400}
+.ln.mono .bub::before{display:none}
+.ln.flash .bub{outline:3px solid var(--gold)}
+mark{background:var(--mark);color:inherit;border-radius:3px}
+.rh{font-size:12px;color:var(--sub);margin-top:12px}
+.empty{color:var(--sub);text-align:center;padding:24px 0}
+details summary{cursor:pointer;font-weight:700}
+.crow{display:flex;gap:8px;align-items:center;margin:8px 0}
+.crow .nm{flex:1}
+.hid{display:none}
+.fld{display:flex;gap:6px;align-items:center;margin-top:6px}
+.fld>*{flex:1;min-width:0}
+.fld label{flex:0 0 6.5em;font-size:12px;color:var(--sub)}
+.ch .ep{font-weight:700;font-size:20px}
+.ch h2{margin:0}
+.tabs{display:flex;gap:6px;margin-bottom:10px}
+.tabs button{flex:1}
+.tabs .on{background:var(--acc);border-color:var(--acc);color:#fff}
+.ro .ln{cursor:default}
+.ro .ch h2{font-size:20px}
+.oln{border-top:1px solid var(--line);padding:8px 0}.oln .r1{display:flex;gap:8px;align-items:center}.oln select{flex:1}.oln textarea{min-height:64px;margin-top:4px}
+</style>
+</head>
+<body>
+<main>
+<div class="tabs"><button id="tEdit" class="on">編集</button><button id="tPrev">プレビュー</button></div>
+<div id="editScreen">
+<div class="card">
+  <div class="row2">
+    <select id="chSel" aria-label="章を選ぶ"></select>
+    <button id="addCh">＋話を追加</button>
+  </div>
+  <div class="fld"><label>章</label><select id="cSel"></select><input type="text" id="cNew" class="hid" placeholder="例：1章"></div>
+  <div class="fld"><label>章のタイトル</label><select id="ctSel"></select><input type="text" id="ctNew" class="hid" placeholder="章のタイトル"></div>
+  <div class="fld"><label>サブタイトル</label><input type="text" id="subIn" placeholder="例：石秘する真相のオブリガート"></div>
+  <div class="fld"><label>話数</label><input type="text" id="epIn" inputmode="numeric" placeholder="例：6"></div>
+  <div class="row2" style="margin-top:8px"><button id="delCh"></button></div>
+</div>
+
+<div class="card">
+  <div class="row2"><b>入力エディタ</b><button id="tgEd">折りたたむ</button></div>
+  <div id="edBody">
+  <div class="chips" id="chips"></div>
+  <div class="now" id="now"></div>
+  <textarea id="txt" placeholder="アプリのテキストを見ながら入力"></textarea>
+  <div class="row2" style="margin-top:6px">
+    <button id="cancel" class="hid">キャンセル</button>
+    <button id="delLn" class="dng hid"></button>
+    <button id="submit" class="pri">追加</button>
+  </div>
+  </div>
+</div>
+
+<div class="card"><details id="ocrBox"><summary>画像から読み込み(文字起こし)</summary>
+  <div class="row2" style="margin-top:8px"><button id="ocrPick">画像を選ぶ(複数可)</button><button id="ocrRun" class="pri" disabled>文字起こし</button></div>
+  <label class="now" style="display:block;margin-top:6px"><input type="checkbox" id="ocrHd" checked> 章情報(章・話数・サブタイトル)も読み取る</label>
+  <div class="now" id="ocrSt">ログ画面のスクショを選ぶか、貼り付け(Ctrl+V)してください。画像は端末内だけで処理されます。</div>
+  <div id="ocrRes"></div>
+</details></div>
+
+<div id="view"></div>
+
+<div class="card">
+  <details>
+    <summary>キャラクター管理</summary>
+    <div class="row2" style="margin-top:8px">
+      <input type="text" id="newName" placeholder="キャラ名（「、」区切りで複数可）">
+      <button id="addChar" class="pri">追加</button>
+    </div>
+    <div id="charList"></div>
+    <p class="now">アイコンを押すと画像を変更できます。</p>
+  </details>
+</div>
+
+<div class="card">
+  <details>
+    <summary>バックアップ</summary>
+    <p class="now">データはこのブラウザ内に保存されます。定期的に書き出してメモなどに控えてください。</p>
+    <textarea id="bk" placeholder="書き出し／読み込み用"></textarea>
+    <div class="row2" style="margin-top:6px">
+      <button id="exp">書き出し</button>
+      <button id="imp" class="dng">読み込み（上書き）</button>
+    </div>
+    <div class="now" id="bkmsg"></div>
+  </details>
+</div>
+</div>
+<div id="prevScreen" class="hid">
+  <div class="card"><div class="row2"><button id="pPrev" aria-label="前の章">‹</button><select id="pSel" aria-label="章を選ぶ"></select><button id="pNext" aria-label="次の章">›</button></div></div>
+  <div class="card">
+    <div class="row2"><b>検索</b><button id="tgS">折りたたむ</button></div>
+    <div id="sBody">
+      <input type="search" id="q" placeholder="検索したい文字" style="margin-top:6px">
+      <div class="row2" style="margin-top:6px">
+        <select id="scope"><option value="all">全体</option><option value="chap">この章（全話）</option><option value="cur">この話だけ</option></select>
+        <select id="qChar"></select>
+      </div>
+    </div>
+  </div>
+  <div class="card ro" id="pBody"></div>
+</div>
+</main>
+<input type="file" id="file" accept="image/*" class="hid">
+<input type="file" id="ocrFile" accept="image/*" multiple class="hid">
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+
+
+<script>
+const KEY='mahoyaku_text_v1';
+const $=s=>document.querySelector(s);
+const uid=()=>Math.random().toString(36).slice(2,9);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){S=null}
+if(!S||!S.chapters||!S.chapters.length){const id=uid();S={chars:[],chapters:[{id,title:'1話',lines:[]}],cur:id}}
+function migrate(){S.chapters.forEach(u=>{if(u.sub===undefined){u.sub=u.title||'';u.c=u.c||'';u.ct=u.ct||'';u.ep=u.ep||''}})}
+migrate();
+let spk='mono',editing=null,armed=null,iconTarget=null,flashId=null,newC=false,newCt=false;
+const epLabel=e=>/^\d+$/.test(e||'')?e+'話':(e||'');
+const unitName=(u,short)=>[short?'':u.c,epLabel(u.ep),u.sub].filter(Boolean).join(' ')||'無題';
+const headHTML=u=>`<div class="ch"><small>${esc([u.c,u.ct].filter(Boolean).join(' '))}</small>${u.ep?`<div class="ep">${esc(epLabel(u.ep))}</div>`:''}<h2>${esc(u.sub||'')}</h2></div>`;
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const chap=()=>S.chapters.find(c=>c.id===S.cur)||S.chapters[0];
+const charOf=id=>S.chars.find(c=>c.id===id);
+function av(c){return c&&c.icon?`<img class="av" src="${c.icon}" alt="">`:`<div class="av ph">${esc(c?c.name[0]:'？')}</div>`}
+function confirmDel(k){if(armed===k){armed=null;return true}armed=k;render();setTimeout(()=>{if(armed===k){armed=null;render()}},3000);return false}
+function hl(t,q){const e=esc(t);if(!q)return e;const eq=esc(q).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');return e.replace(new RegExp(eq,'gi'),m=>`<mark>${m}</mark>`)}
+function lineHTML(l,q,chId){
+  const c=charOf(l.char),mono=l.char==='mono',P=chId?'p':'l';
+  const body=`<div class="bub">${hl(l.text,q)}</div>`;
+  const act=chId==='ro'?'':chId?`data-act="jump" data-ch="${chId}" data-id="${l.id}"`:`data-act="edit" data-id="${l.id}"`;
+  if(mono)return `<div class="ln mono${flashId===l.id?' flash':''}" id="${P}${l.id}" ${act}>${body}</div>`;
+  return `<div class="ln${flashId===l.id?' flash':''}" id="${P}${l.id}" ${act}>${av(c)}<div class="body"><div class="nm">${esc(c?c.name:'（削除済み）')}</div>${body}</div></div>`;
+}
+function fillCombo(sel,inp,key,isNew){
+  const cur=chap(),src=isNew?S.chapters.filter(u=>u!==cur):S.chapters;
+  const vals=[...new Set(src.map(u=>u[key]).filter(Boolean))];
+  sel.innerHTML='<option value="">（未選択）</option>'+vals.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('')+'<option value="__new">＋新規入力</option>';
+  sel.value=isNew?'__new':(cur[key]||'');
+  inp.classList.toggle('hid',!isNew);
+  if(isNew)inp.value=cur[key]||'';
+}
+function renderForm(){
+  const u=chap(),groups=[];
+  S.chapters.forEach(x=>{const k=x.c||'';let g=groups.find(g=>g.k===k);if(!g){g={k,t:x.ct,us:[]};groups.push(g)}g.us.push(x)});
+  $('#chSel').innerHTML=groups.map(g=>`<optgroup label="${esc((g.k||'章未設定')+(g.t?' '+g.t:''))}">`+g.us.map(x=>`<option value="${x.id}"${x.id===S.cur?' selected':''}>${esc(unitName(x,true))}</option>`).join('')+'</optgroup>').join('');
+  fillCombo($('#cSel'),$('#cNew'),'c',newC);
+  fillCombo($('#ctSel'),$('#ctNew'),'ct',newCt);
+  $('#subIn').value=u.sub||'';$('#epIn').value=u.ep||'';
+}
+function renderTop(){
+  renderForm();
+  $('#delCh').textContent=armed==='ch'?'本当に削除?':'章を削除';
+  $('#delCh').className=armed==='ch'?'dng':'';
+  $('#delCh').disabled=S.chapters.length<2;
+  $('#chips').innerHTML=`<button class="chip${spk==='mono'?' on':''}" data-act="spk" data-id="mono"><div class="av ph">✎</div><span>モノローグ</span></button>`+
+    S.chars.map(c=>`<button class="chip${spk===c.id?' on':''}" data-act="spk" data-id="${c.id}">${av(c)}<span>${esc(c.name)}</span></button>`).join('');
+  const c=charOf(spk);
+  $('#now').innerHTML=`話者：<b>${spk==='mono'?'モノローグ':esc(c?c.name:'')}</b>`+(S.chars.length?'':'（下の「キャラクター管理」でキャラを追加）');
+  $('#submit').textContent=editing?'更新':'追加';
+  $('#cancel').classList.toggle('hid',!editing);
+  $('#delLn').classList.toggle('hid',!editing);
+  $('#delLn').textContent=armed==='ln'?'本当に削除?':'削除';
+  const cur=$('#qChar').value;
+  $('#qChar').innerHTML='<option value="">全キャラ</option><option value="mono">モノローグ</option>'+S.chars.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  $('#qChar').value=cur;if($('#qChar').value!==cur)$('#qChar').value='';
+}
+function searchHTML(){
+  const q=$('#q').value.trim(),cf=$('#qChar').value,sc=$('#scope').value;
+  if(!(q||cf))return null;
+  {
+    let n=0,h='';
+    S.chapters.forEach(ch=>{
+      if(sc==='cur'&&ch.id!==S.cur)return;
+      if(sc==='chap'&&ch.c!==chap().c)return;
+      const ms=ch.lines.filter(l=>(!cf||l.char===cf)&&(!q||l.text.toLowerCase().includes(q.toLowerCase())));
+      if(!ms.length)return;
+      n+=ms.length;
+      h+=`<div class="rh">${esc(unitName(ch))}（${ms.length}件）</div>`+ms.map(l=>lineHTML(l,q,ch.id)).join('');
+    });
+    return `<div class="now">検索結果 ${n}件（タップでその話へ移動）</div>${h||'<div class="empty">見つかりませんでした</div>'}`;
+  }
+}
+function renderView(){
+  const ch=chap();
+  $('#view').innerHTML=`<div class="card">${headHTML(ch)}`+
+    (ch.lines.length?ch.lines.map(l=>lineHTML(l,'')).join(''):'<div class="empty">上のエディタからセリフを追加してください</div>')+`</div>`;
+}
+function renderChars(){
+  $('#charList').innerHTML=S.chars.map(c=>`<div class="crow"><label style="cursor:pointer" title="アイコンを変更" data-act="icon" data-id="${c.id}">${av(c)}</label><div class="nm">${esc(c.name)}</div><button class="${armed==='c'+c.id?'dng':''}" data-act="delchar" data-id="${c.id}">${armed==='c'+c.id?'本当に削除?':'削除'}</button></div>`).join('');
+}
+function renderPrev(){
+  const i=S.chapters.findIndex(c=>c.id===S.cur),ch=chap();
+  $('#pSel').innerHTML=S.chapters.map(c=>`<option value="${c.id}"${c.id===S.cur?' selected':''}>${esc(unitName(c))}</option>`).join('');
+  $('#pPrev').disabled=i<=0;$('#pNext').disabled=i>=S.chapters.length-1;
+  const sr=searchHTML();$('#pBody').innerHTML=sr!==null?sr:`${headHTML(ch)}`+(ch.lines.length?ch.lines.map(l=>lineHTML(l,'','ro')).join(''):'<div class="empty">この章はまだ空です</div>');
+}
+function render(){renderTop();renderView();renderChars();renderPrev()}
+
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-act]');if(!t)return;
+  const a=t.dataset.act,id=t.dataset.id;
+  if(a==='spk'){spk=id;renderTop()}
+  else if(a==='edit'){const l=chap().lines.find(x=>x.id===id);if(!l)return;editing=id;spk=l.char;edOpen=true;applyEd();$('#txt').value=l.text;render();scrollTo({top:0,behavior:'smooth'});$('#txt').focus()}
+  else if(a==='jump'){newC=newCt=false;S.cur=t.dataset.ch;save();flashId=id;$('#q').value='';$('#qChar').value='';render();const el=document.getElementById('p'+id);if(el)el.scrollIntoView({block:'center'});setTimeout(()=>{flashId=null;const x=document.getElementById('p'+id);if(x)x.classList.remove('flash')},1800)}
+  else if(a==='icon'){e.preventDefault();iconTarget=id;$('#file').click()}
+  else if(a==='delchar'){if(confirmDel('c'+id)){S.chars=S.chars.filter(c=>c.id!==id);if(spk===id)spk='mono';save();render()}}
+});
+$('#chSel').onchange=e=>{newC=newCt=false;S.cur=e.target.value;editing=null;$('#txt').value='';save();render()};
+function syncCt(u){if(u.c)S.chapters.forEach(x=>{if(x.c===u.c)x.ct=u.ct})}
+function afterType(){save();const o=$('#chSel').selectedOptions[0];if(o)o.textContent=unitName(chap(),true);renderView();renderPrev()}
+$('#cSel').onchange=e=>{const u=chap(),v=e.target.value;
+  if(v==='__new'){newC=newCt=true;u.c='';u.ct=''}
+  else{newC=false;u.c=v;const m=S.chapters.find(x=>x!==u&&x.c===v&&x.ct);if(m){u.ct=m.ct;newCt=false}}
+  save();render()};
+$('#ctSel').onchange=e=>{const u=chap(),v=e.target.value;
+  if(v==='__new'){newCt=true;u.ct=''}else{newCt=false;u.ct=v;syncCt(u)}
+  save();render()};
+$('#cNew').oninput=e=>{chap().c=e.target.value;afterType()};
+$('#ctNew').oninput=e=>{const u=chap();u.ct=e.target.value;syncCt(u);afterType()};
+$('#subIn').oninput=e=>{chap().sub=e.target.value;afterType()};
+$('#epIn').oninput=e=>{chap().ep=e.target.value;afterType()};
+$('#addCh').onclick=()=>{
+  const u=chap(),n=parseInt(u.ep,10),nu={id:uid(),c:u.c,ct:u.ct,ep:isNaN(n)?'':String(n+1),sub:'',lines:[]};
+  S.chapters.splice(S.chapters.map(x=>x.c).lastIndexOf(u.c)+1,0,nu);
+  S.cur=nu.id;newC=newCt=false;editing=null;$('#txt').value='';save();render();$('#subIn').focus()};
+$('#delCh').onclick=()=>{if(confirmDel('ch')){newC=newCt=false;S.chapters=S.chapters.filter(c=>c.id!==S.cur);S.cur=S.chapters[0].id;save();render()}};
+function submit(){
+  const v=$('#txt').value.replace(/\s+$/,'');if(!v.trim())return;
+  const ch=chap();
+  if(editing){const l=ch.lines.find(x=>x.id===editing);if(l){l.text=v;l.char=spk}editing=null}
+  else{const l={id:uid(),char:spk,text:v};ch.lines.push(l)}
+  $('#txt').value='';save();render();
+}
+$('#submit').onclick=submit;
+$('#txt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&e.keyCode!==229){e.preventDefault();submit()}});
+$('#cancel').onclick=()=>{editing=null;$('#txt').value='';render()};
+$('#delLn').onclick=()=>{if(confirmDel('ln')){const ch=chap();ch.lines=ch.lines.filter(l=>l.id!==editing);editing=null;$('#txt').value='';save();render()}};
+['q','scope','qChar'].forEach(i=>$('#'+i).addEventListener('input',renderPrev));
+$('#addChar').onclick=()=>{
+  $('#newName').value.split(/[、,\n]/).map(s=>s.trim()).filter(Boolean).forEach(n=>S.chars.push({id:uid(),name:n,icon:''}));
+  $('#newName').value='';save();render();
+};
+$('#file').onchange=e=>{
+  const f=e.target.files[0];e.target.value='';if(!f||!iconTarget)return;
+  const r=new FileReader();
+  r.onload=()=>{const im=new Image();im.onload=()=>{
+    const s=Math.min(im.width,im.height),cv=document.createElement('canvas');cv.width=cv.height=128;
+    cv.getContext('2d').drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,128,128);
+    const c=charOf(iconTarget);if(c){c.icon=cv.toDataURL('image/jpeg',.85);save();render()}
+  };im.src=r.result};
+  r.readAsDataURL(f);
+};
+$('#exp').onclick=()=>{$('#bk').value=JSON.stringify(S);$('#bk').select();$('#bkmsg').textContent='書き出しました。全選択してコピーしてください。'};
+$('#imp').onclick=()=>{
+  try{const d=JSON.parse($('#bk').value);if(!d.chapters||!d.chapters.length||!d.chars)throw 0;S=d;migrate();newC=newCt=false;if(!S.cur||!chap())S.cur=S.chapters[0].id;save();spk='mono';editing=null;render();$('#bkmsg').textContent='読み込みました。'}
+  catch(e){$('#bkmsg').textContent='読み込めませんでした。書き出したデータをそのまま貼り付けてください。'}
+};
+let edOpen=true;
+function applyEd(){$('#edBody').classList.toggle('hid',!edOpen);$('#tgEd').textContent=edOpen?'折りたたむ':'開く'}
+$('#tgEd').onclick=()=>{edOpen=!edOpen;applyEd()};
+function setMode(m){
+  $('#editScreen').classList.toggle('hid',m!=='edit');$('#prevScreen').classList.toggle('hid',m!=='prev');
+  $('#tEdit').classList.toggle('on',m==='edit');$('#tPrev').classList.toggle('on',m==='prev');
+  render();scrollTo(0,0);
+}
+$('#tEdit').onclick=()=>setMode('edit');
+$('#tPrev').onclick=()=>setMode('prev');
+function goCh(id){newC=newCt=false;S.cur=id;editing=null;$('#txt').value='';save();render();scrollTo(0,0)}
+$('#pSel').onchange=e=>goCh(e.target.value);
+$('#pPrev').onclick=()=>{const i=S.chapters.findIndex(c=>c.id===S.cur);if(i>0)goCh(S.chapters[i-1].id)};
+$('#pNext').onclick=()=>{const i=S.chapters.findIndex(c=>c.id===S.cur);if(i<S.chapters.length-1)goCh(S.chapters[i+1].id)};
+let sOpen=true;
+$('#tgS').onclick=()=>{sOpen=!sOpen;$('#sBody').classList.toggle('hid',!sOpen);$('#tgS').textContent=sOpen?'折りたたむ':'開く'};
+/* ===== 画像から読み込み(OCR・端末内処理) ===== */
+const OW=1180;let oFiles=[],oWorker=null,R=null;
+const oSt=t=>$('#ocrSt').textContent=t;
+function oAdd(l){oFiles.push(...[...l].filter(f=>f.type.startsWith('image/')));$('#ocrRun').disabled=!oFiles.length;oSt(oFiles.length?oFiles.length+' 枚選択中':'')}
+$('#ocrPick').onclick=()=>$('#ocrFile').click();
+$('#ocrFile').onchange=e=>{oAdd(e.target.files);e.target.value=''};
+document.addEventListener('paste',e=>{const f=[...e.clipboardData.files].filter(x=>x.type.startsWith('image/'));if(f.length){$('#ocrBox').open=true;oAdd(f)}});
+async function loadImg(f){const b=await createImageBitmap(f),c=document.createElement('canvas');c.width=OW;c.height=Math.round(b.height*OW/b.width);c.getContext('2d',{willReadFrequently:true}).drawImage(b,0,0,c.width,c.height);return c}
+function findBubbles(c){
+  const w=c.width,h=c.height,d=c.getContext('2d').getImageData(0,0,w,h).data;
+  const blue=i=>Math.abs(d[i]-62)<45&&Math.abs(d[i+1]-162)<45&&Math.abs(d[i+2]-221)<45;
+  const x0=Math.round(w*.18),x1=Math.round(w*.97),rows=[];
+  for(let y=0;y<h;y++){let n=0;for(let x=x0;x<x1;x++)if(blue((y*w+x)*4))n++;rows.push(n>w*.25)}
+  const bands=[];let s=-1,gap=0;
+  for(let y=0;y<=h;y++){
+    if(y<h&&rows[y]){if(s<0)s=y;gap=0}
+    else if(s>=0){gap++;if(gap>8||y===h){bands.push([s,y-gap]);s=-1;gap=0}}
+  }
+  const res=[];
+  for(const [t,b] of bands){
+    const bh=b-t+1;if(bh<w*.055)continue;
+    let left=Math.round(w*.2);
+    for(let x=Math.round(w*.1);x<w;x++){let n=0;for(let y=t;y<=b;y++)if(blue((y*w+x)*4))n++;if(n>bh*.5){left=x;break}}
+    res.push({top:t,bot:b,left});
+  }
+  return res;
+}
+function cropC(c,x,y,w,h,mode){
+  x=Math.max(0,Math.round(x));y=Math.max(0,Math.round(y));w=Math.min(c.width-x,Math.round(w));h=Math.min(c.height-y,Math.round(h));
+  if(w<5||h<5)return null;
+  const s=c.getContext('2d').getImageData(x,y,w,h).data,pad=24,th=mode==='hd'?110:140;
+  const o=document.createElement('canvas');o.width=w+pad*2;o.height=h+pad*2;
+  const ox=o.getContext('2d');ox.fillStyle='#fff';ox.fillRect(0,0,o.width,o.height);
+  const out=ox.createImageData(w,h),t=out.data;
+  for(let i=0;i<s.length;i+=4){
+    const v=mode==='text'?(s[i]>150?0:255):((.3*s[i]+.59*s[i+1]+.11*s[i+2])<th?0:255);
+    t[i]=t[i+1]=t[i+2]=v;t[i+3]=255;
+  }
+  ox.putImageData(out,pad,pad);return o;
+}
+const norm=s=>s.replace(/[ \t\u3000]/g,'').replace(/\?/g,'？').replace(/!/g,'！').replace(/,/g,'、').replace(/\.{2,}|・{2,}|…+/g,'……').replace(/\./g,'。').replace(/~/g,'〜');
+const cleanT=t=>t.split('\n').map(norm).filter(Boolean).join('\n');
+function lev(a,b){
+  const m=[...Array(a.length+1)].map((_,i)=>[i,...Array(b.length).fill(0)]);
+  for(let j=1;j<=b.length;j++)m[0][j]=j;
+  for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+  return m[a.length][b.length];
+}
+function matchChar(n){if(!n)return null;let best=null,bd=1e9;for(const c of S.chars){const d=lev(n,c.name);if(d<=Math.floor(c.name.length/2)&&d<bd){bd=d;best=c}}return best}
+async function ocrRec(cv,psm){await oWorker.setParameters({tessedit_pageseg_mode:psm});return (await oWorker.recognize(cv)).data.text}
+// 前の内容の末尾と新しい内容の先頭が重なっている件数(スクロールしたスクショの重複対策)
+const sameT=(a,b)=>lev(a,b)<=Math.floor(Math.max(a.length,b.length)*.12);
+function ov(p,n,key){for(let k=Math.min(p.length,n.length);k>0;k--){let ok=1;for(let j=0;j<k&&ok;j++){const a=p[p.length-k+j],b=n[j];ok=key(a)===key(b)&&sameT(a.text,b.text)}if(ok)return k}return 0}
+const cLabel=n=>S.chapters.map(x=>x.c).find(c=>c&&(c.match(/\d+/)||[])[0]===n)||n+'章';
+function parseHd(t){
+  const z=t.split('\n').map(s=>norm(s).replace(/[０-９]/g,d=>String.fromCharCode(d.charCodeAt(0)-65248))).filter(Boolean),l=z[0]||'';
+  const n=s=>{const v=parseInt(s.replace(/[lI|]/g,'1'),10);return isNaN(v)?'':String(v)};
+  const c=l.match(/第?([0-9lI|]+)章/),e=l.match(/第?([0-9lI|]+)話/),h={c:'',ep:'',sub:''};
+  if(c&&n(c[1]))h.c=cLabel(n(c[1]));
+  if(e)h.ep=n(e[1]);
+  if(c||e)h.sub=z.slice(1).join('');
+  return h;
+}
+$('#ocrRun').onclick=async()=>{
+  $('#ocrRun').disabled=true;
+  try{
+    if(!oWorker){oSt('日本語モデルを読み込み中…(初回のみダウンロード)');oWorker=await Tesseract.createWorker('jpn')}
+    const useHd=$('#ocrHd').checked;let hd=null;const items=[];
+    for(let k=0;k<oFiles.length;k++){
+      const c=await loadImg(oFiles[k]),bs=findBubbles(c),cur=[];
+      if(useHd&&!(hd&&(hd.c||hd.ep))){const hc=cropC(c,OW*.1,OW*.375,OW*.8,OW*.155,'hd');if(hc)hd=parseHd(await ocrRec(hc,'6'))}
+      for(let i=0;i<bs.length;i++){
+        oSt(`画像 ${k+1}/${oFiles.length}・${i+1}/${bs.length} を認識中…`);
+        const b=bs[i],nm=cropC(c,b.left,b.top-OW*.052,OW*.45,OW*.04,'name'),tx=cropC(c,b.left+OW*.02,b.top+OW*.008,OW*.885-(b.left+OW*.02),b.bot-b.top-OW*.016,'text');
+        const raw=nm?norm(await ocrRec(nm,'7')).replace(/\n/g,''):'',text=tx?cleanT(await ocrRec(tx,'6')):'';
+        if(!text)continue;
+        const m=matchChar(raw);cur.push({name:m?m.name:raw,text});
+      }
+      items.push(...cur.slice(ov(items,cur,x=>x.name)));
+    }
+    R={hd:useHd?(hd||{c:'',ep:'',sub:''}):null,items:items.map(x=>({...x,on:1,sp:(S.chars.find(c=>c.name===x.name)||{}).id||(x.name?'__new:'+x.name:'mono')}))};
+    renderR();oSt(`${items.length} 件を認識しました。内容を確認して「取り込む」を押してください。`);
+  }catch(e){oSt('エラー: '+e.message)}
+  $('#ocrRun').disabled=!oFiles.length;
+};
+function renderR(){
+  const el=$('#ocrRes');if(!R){el.innerHTML='';return}
+  const h=R.hd;
+  el.innerHTML=(h?`<div class="fld"><label>章情報</label><input type="text" id="hC" value="${esc(h.c)}" placeholder="章"><input type="text" id="hEp" value="${esc(h.ep)}" placeholder="話数"></div><div class="fld"><label>サブタイトル</label><input type="text" id="hSub" value="${esc(h.sub)}"></div>`:'')+
+  R.items.map((it,i)=>`<div class="oln"><div class="r1"><input type="checkbox" data-o="on" data-i="${i}"${it.on?' checked':''}><select data-o="sp" data-i="${i}"><option value="mono">モノローグ</option>${S.chars.map(c=>`<option value="${c.id}"${it.sp===c.id?' selected':''}>${esc(c.name)}</option>`).join('')}${it.name&&!S.chars.some(c=>c.name===it.name)?`<option value="__new:${esc(it.name)}"${it.sp.startsWith('__new:')?' selected':''}>＋新規キャラ「${esc(it.name)}」</option>`:''}</select></div><textarea data-o="tx" data-i="${i}">${esc(it.text)}</textarea></div>`).join('')+
+  `<div class="row2" style="margin-top:8px"><button id="ocrDrop" class="dng">破棄</button><button id="ocrGo" class="pri">取り込む</button></div>`;
+}
+$('#ocrRes').addEventListener('input',e=>{const t=e.target;if(R&&t.dataset.o==='tx')R.items[t.dataset.i].text=t.value});
+$('#ocrRes').addEventListener('change',e=>{const t=e.target,o=t.dataset.o;if(!R||!o)return;if(o==='on')R.items[t.dataset.i].on=t.checked;else if(o==='sp')R.items[t.dataset.i].sp=t.value});
+$('#ocrRes').addEventListener('click',e=>{if(e.target.id==='ocrDrop'){R=null;renderR();oSt('')}else if(e.target.id==='ocrGo')ocrCommit()});
+// 同じ章・話数があればその話へ、現在の話が空ならそこへ、それ以外は新しい話を作って反映
+function applyHd(h){
+  if(!h.c&&!h.ep&&!h.sub)return chap();
+  let u=h.c&&h.ep?S.chapters.find(x=>x.c===h.c&&String(x.ep)===h.ep):null;
+  if(!u){
+    const cur=chap();
+    if(!cur.lines.length&&!cur.sub&&!cur.ep)u=cur;
+    else{u={id:uid(),c:h.c,ct:'',ep:'',sub:'',lines:[]};const i=S.chapters.map(x=>x.c).lastIndexOf(h.c);S.chapters.splice(h.c&&i>=0?i+1:S.chapters.length,0,u)}
+  }
+  if(h.c){u.c=h.c;const m=S.chapters.find(x=>x!==u&&x.c===h.c&&x.ct);if(m)u.ct=m.ct}
+  if(h.ep)u.ep=h.ep;if(h.sub)u.sub=h.sub;
+  S.cur=u.id;newC=newCt=false;editing=null;$('#txt').value='';return u;
+}
+function ocrCommit(){
+  const u=R.hd?applyHd({c:$('#hC').value.trim(),ep:$('#hEp').value.trim(),sub:$('#hSub').value.trim()}):chap();
+  const resolve=sp=>{if(!sp.startsWith('__new:'))return sp;const n=sp.slice(6);let c=S.chars.find(x=>x.name===n);if(!c){c={id:uid(),name:n,icon:''};S.chars.push(c)}return c.id};
+  let add=R.items.filter(i=>i.on&&i.text.trim()).map(i=>({char:resolve(i.sp),text:i.text.replace(/\s+$/,'')}));
+  const k=ov(u.lines,add,l=>l.char);
+  add=add.slice(k);add.forEach(a=>u.lines.push({id:uid(),...a}));
+  R=null;save();render();renderR();
+  oSt(`${add.length}件を取り込みました`+(k?`(前の内容と重複する${k}件はスキップ)`:'')+`:${unitName(u)}`);
+}
+
+render();
+</script>
+</body>
+</html>
