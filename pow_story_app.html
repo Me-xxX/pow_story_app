@@ -63,6 +63,7 @@ details summary{cursor:pointer;font-weight:700}
 .ro .ln{cursor:default}
 .ro .ch h2{font-size:20px}
 .oln{border-top:1px solid var(--line);padding:8px 0}.oln .r1{display:flex;gap:8px;align-items:center}.oln select{flex:1}.oln textarea{min-height:64px;margin-top:4px}
+.oimg{display:block;max-width:100%;margin-top:4px;border-radius:6px}
 </style>
 </head>
 <body>
@@ -100,6 +101,7 @@ details summary{cursor:pointer;font-weight:700}
   <label class="now" style="display:block;margin-top:6px"><input type="checkbox" id="ocrHd" checked> 章情報(章・話数・サブタイトル)も読み取る</label>
   <label class="now" style="display:block;margin-top:6px">オレンジの吹き出し(あなたの発言)の名前 <input type="text" id="ocrMe" value="晶" style="width:7em"></label>
   <div class="now" id="ocrSt">ログ画面のスクショを選ぶか、貼り付け(Ctrl+V)してください。画像は端末内だけで処理されます。</div>
+  <details id="fixBox" style="margin-top:8px"><summary>学習した修正(自動で直す内容)</summary><div id="fixList"></div></details>
   <div id="ocrRes"></div>
 </details></div>
 
@@ -416,6 +418,51 @@ function parseHd(t){
   if(c||e)h.sub=z.slice(1).join('');
   return h;
 }
+/* ===== 修正の学習(S.fix に保存=バックアップにも含まれる) ===== */
+const fixes=()=>S.fix||(S.fix=[]);
+const applyFix=t=>fixes().filter(x=>!x.t).sort((p,q)=>q.a.length-p.a.length).reduce((s,x)=>s.split(x.a).join(x.b),t);
+function diffSegs(a,b){
+  const n=a.length,m=b.length,D=[...Array(n+1)].map(()=>new Array(m+1).fill(0));
+  for(let i=0;i<=n;i++)D[i][0]=i;for(let j=0;j<=m;j++)D[0][j]=j;
+  for(let i=1;i<=n;i++)for(let j=1;j<=m;j++)D[i][j]=Math.min(D[i-1][j]+1,D[i][j-1]+1,D[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+  const segs=[];let i=n,j=m,sa='',sb='';
+  const flush=()=>{if(sa||sb)segs.unshift({sa,sb,i,j});sa=sb=''};
+  while(i>0||j>0){
+    if(i>0&&j>0&&a[i-1]===b[j-1]&&D[i][j]===D[i-1][j-1]){flush();i--;j--}
+    else if(i>0&&j>0&&D[i][j]===D[i-1][j-1]+1){sa=a[i-1]+sa;sb=b[j-1]+sb;i--;j--}
+    else if(i>0&&D[i][j]===D[i-1][j]+1){sa=a[i-1]+sa;i--}
+    else{sb=b[j-1]+sb;j--}
+  }
+  flush();return segs;
+}
+// OCR結果(orig)と直した結果(fin)の差分を、前後2文字の文脈つきで「誤り→正」として記録
+function learn(orig,fin){
+  orig=orig||'';fin=(fin||'').trim();
+  if(!orig||orig===fin||orig.length>200||fin.length>200)return 0;
+  const segs=diffSegs(orig,fin);if(segs.length>5)return 0;
+  const F=fixes();let cnt=0;
+  for(const g of segs){
+    if(g.sa.length>6||g.sb.length>6)continue;
+    const L=(t,k)=>t.slice(Math.max(0,k-2),k).split('\n').pop(),Rr=(t,k)=>t.slice(k,k+2).split('\n')[0];
+    const lo=L(orig,g.i),ro=Rr(orig,g.i+g.sa.length),lf=L(fin,g.j),rf=Rr(fin,g.j+g.sb.length);
+    let A,B; // 1文字だけの違いは前の文脈つき(なければ後ろ)で記録して誤爆を防ぐ
+    if(!g.sa){A=lo+ro;B=lf+g.sb+rf}else if(g.sa.length>=2){A=g.sa;B=g.sb}else if(lo){A=lo+g.sa;B=lf+g.sb}else{A=g.sa+ro;B=g.sb+rf}
+    if(A===B||A.length<2||/\n/.test(A+B))continue;
+    const e=F.find(x=>!x.t&&x.a===A);
+    if(e){if(e.b===B)e.n++;else{e.b=B;e.n=1}}else F.push({a:A,b:B,n:1});
+    cnt++;
+  }
+  if(F.length>500)F.splice(0,F.length-500);
+  return cnt;
+}
+function thumb(c,x,y,w,h){const o=document.createElement('canvas'),k=Math.min(1,360/w);o.width=Math.max(1,Math.round(w*k));o.height=Math.max(1,Math.round(h*k));o.getContext('2d').drawImage(c,x,y,w,h,0,0,o.width,o.height);return o.toDataURL('image/jpeg',.7)}
+function renderFix(){
+  const f=fixes();
+  $('#fixList').innerHTML=f.length?f.map((x,i)=>`<div style="display:flex;gap:8px;align-items:center;padding:4px 0"><span style="flex:1">${esc(x.a)} → ${esc(x.b)}${x.t==='n'?'(名前)':''} <small>×${x.n}</small></span><button class="dng" data-fx="${i}">削除</button></div>`).join(''):'<p class="now">まだありません。確認画面で直して取り込むと溜まっていきます。</p>';
+}
+$('#fixBox').addEventListener('toggle',renderFix);
+$('#fixList').addEventListener('click',e=>{const i=e.target.dataset.fx;if(i===undefined)return;fixes().splice(+i,1);save();renderFix()});
+
 $('#ocrRun').onclick=async()=>{
   $('#ocrRun').disabled=true;
   const useHd=$('#ocrHd').checked,me=$('#ocrMe').value.trim()||'晶';
@@ -431,10 +478,10 @@ $('#ocrRun').onclick=async()=>{
         const b=bs[i],mono=b.t===3;
         const nm=b.t===1?cropC(c,b.left,b.top-OW*.052,OW*.45,OW*.04,'name'):null;
         const tx=cropC(c,b.left+OW*.02,b.top+OW*.008,b.tr-(b.left+OW*.02),b.bot-b.top-OW*.016,[0,155,150,188][b.t]);
-        const raw=nm?norm(await ocrRec(nm,'7')).replace(/\n/g,''):'',text=tx?cleanT(await ocrRec(tx,'6')):'';
-        if(!text)continue;
-        const m=b.t===1?matchChar(raw):null;
-        cur.push({name:mono?'':b.t===2?me:(m?m.name:raw),text,mono});
+        const raw=nm?norm(await ocrRec(nm,'7')).replace(/\n/g,''):'',rawT=tx?cleanT(await ocrRec(tx,'6')):'';
+        if(!rawT)continue;
+        const al=fixes().find(x=>x.t==='n'&&x.a===raw),rn=al?al.b:raw,m=b.t===1?matchChar(rn):null,ny=b.t===1?OW*.052:0;
+        cur.push({name:mono?'':b.t===2?me:(m?m.name:rn),text:applyFix(rawT),orig:rawT,rawName:raw,mono,img:thumb(c,b.left,b.top-ny,b.tr-b.left,b.bot-b.top+ny)});
       }
       items.push(...cur.slice(ov(items,cur,x=>x.name)));
     }
@@ -447,7 +494,7 @@ function renderR(){
   const el=$('#ocrRes');if(!R){el.innerHTML='';return}
   const h=R.hd;
   el.innerHTML=(h?`<div class="fld"><label>章情報</label><input type="text" id="hC" value="${esc(h.c)}" placeholder="章"><input type="text" id="hEp" value="${esc(h.ep)}" placeholder="話数"></div><div class="fld"><label>サブタイトル</label><input type="text" id="hSub" value="${esc(h.sub)}"></div>`:'')+
-  R.items.map((it,i)=>`<div class="oln"><div class="r1"><input type="checkbox" data-o="on" data-i="${i}"${it.on?' checked':''}><select data-o="sp" data-i="${i}"><option value="mono">モノローグ</option>${S.chars.map(c=>`<option value="${c.id}"${it.sp===c.id?' selected':''}>${esc(c.name)}</option>`).join('')}${it.name&&!S.chars.some(c=>c.name===it.name)?`<option value="__new:${esc(it.name)}"${it.sp.startsWith('__new:')?' selected':''}>＋新規キャラ「${esc(it.name)}」</option>`:''}</select></div><textarea data-o="tx" data-i="${i}">${esc(it.text)}</textarea></div>`).join('')+
+  R.items.map((it,i)=>`<div class="oln"><div class="r1"><input type="checkbox" data-o="on" data-i="${i}"${it.on?' checked':''}><select data-o="sp" data-i="${i}"><option value="mono">モノローグ</option>${S.chars.map(c=>`<option value="${c.id}"${it.sp===c.id?' selected':''}>${esc(c.name)}</option>`).join('')}${it.name&&!S.chars.some(c=>c.name===it.name)?`<option value="__new:${esc(it.name)}"${it.sp.startsWith('__new:')?' selected':''}>＋新規キャラ「${esc(it.name)}」</option>`:''}</select></div>${it.img?`<img class="oimg" src="${it.img}">`:''}<textarea data-o="tx" data-i="${i}">${esc(it.text)}</textarea></div>`).join('')+
   `<div class="row2" style="margin-top:8px"><button id="ocrDrop" class="dng">破棄</button><button id="ocrGo" class="pri">取り込む</button></div>`;
 }
 $('#ocrRes').addEventListener('input',e=>{const t=e.target;if(R&&t.dataset.o==='tx')R.items[t.dataset.i].text=t.value});
@@ -470,10 +517,14 @@ function ocrCommit(){
   const u=R.hd?applyHd({c:$('#hC').value.trim(),ep:$('#hEp').value.trim(),sub:$('#hSub').value.trim()}):chap();
   const resolve=sp=>{if(!sp.startsWith('__new:'))return sp;const n=sp.slice(6);let c=S.chars.find(x=>x.name===n);if(!c){c={id:uid(),name:n,icon:''};S.chars.push(c)}return c.id};
   let add=R.items.filter(i=>i.on&&i.text.trim()).map(i=>({char:resolve(i.sp),text:i.text.replace(/\s+$/,'')}));
+  let learned=0;
+  R.items.forEach(i=>{if(!i.on)return;learned+=learn(i.orig,i.text);
+    const ch=S.chars.find(c=>c.id===i.sp);
+    if(ch&&!i.mono&&i.rawName&&i.rawName!==ch.name&&!fixes().some(x=>x.t==='n'&&x.a===i.rawName)){fixes().push({a:i.rawName,b:ch.name,t:'n',n:1});learned++}});
   const k=ov(u.lines,add,l=>l.char);
   add=add.slice(k);add.forEach(a=>u.lines.push({id:uid(),...a}));
   R=null;save();render();renderR();
-  oSt(`${add.length}件を取り込みました`+(k?`(前の内容と重複する${k}件はスキップ)`:'')+`:${unitName(u)}`);
+  oSt(`${add.length}件を取り込みました`+(k?`(前の内容と重複する${k}件はスキップ)`:'')+(learned?`/修正${learned}件を学習`:'')+`:${unitName(u)}`);renderFix();
 }
 
 
