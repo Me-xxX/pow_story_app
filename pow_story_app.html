@@ -119,8 +119,11 @@ details summary{cursor:pointer;font-weight:700}
 <div class="card">
   <details>
     <summary>バックアップ</summary>
-    <p class="now">データはこのブラウザ内に保存されます。定期的に書き出してメモなどに控えてください。</p>
-    <textarea id="bk" placeholder="書き出し／読み込み用"></textarea>
+    <p class="now">データはこのブラウザ内に保存されます。定期的にファイルへ書き出して控えてください(アイコン画像も含まれます)。</p>
+    <div class="row2"><button id="expF" class="pri">ファイルに書き出し</button><button id="impF" class="dng">ファイルから読み込み(上書き)</button></div>
+    <input type="file" id="bkFile" accept=".json,application/json" class="hid">
+    <p class="now" style="margin-top:12px">ファイルが使えない環境向けの予備(コピペ方式)</p>
+    <textarea id="bk" placeholder="予備：コピペ用の書き出し／読み込み"></textarea>
     <div class="row2" style="margin-top:6px">
       <button id="exp">書き出し</button>
       <button id="imp" class="dng">読み込み（上書き）</button>
@@ -433,6 +436,25 @@ function ocrCommit(){
   R=null;save();render();renderR();
   oSt(`${add.length}件を取り込みました`+(k?`(前の内容と重複する${k}件はスキップ)`:'')+`:${unitName(u)}`);
 }
+
+
+/* ===== ファイル方式のバックアップ ===== */
+$('#expF').onclick=()=>{
+  const d=new Date(),p=n=>String(n).padStart(2,'0'),name=`mahoyaku_backup_${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}.json`;
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'}));a.download=name;
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  $('#bkmsg').textContent=name+' を書き出しました。';
+};
+$('#impF').onclick=()=>$('#bkFile').click();
+$('#bkFile').onchange=async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{
+    const d=JSON.parse(await f.text());if(!d.chapters||!d.chapters.length||!d.chars)throw 0;
+    const n=d.chapters.reduce((a,c)=>a+(c.lines||[]).length,0);
+    if(!confirm(`「${f.name}」を読み込みます。\n(話${d.chapters.length}件・セリフ${n}件・キャラ${d.chars.length}件)\n現在のデータは上書きされます。よろしいですか?`))return;
+    S=d;migrate();newC=newCt=false;if(!S.cur||!chap())S.cur=S.chapters[0].id;save();spk='mono';editing=null;render();$('#bkmsg').textContent='読み込みました。';
+  }catch(err){$('#bkmsg').textContent='読み込めませんでした。書き出したファイルを選んでください。'}
+};
 
 render();
 </script>
