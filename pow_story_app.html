@@ -6,9 +6,9 @@
 <title>魔法使いの約束 テキストノート</title>
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
---bg:#eef3f8;--card:#fff;--text:#2b3344;--sub:#6b7686;--line:#d5dde8;--bub:#5c9ed6;--bubt:#fff;--mono:#fff;--gold:#c8a95a;--acc:#2f6fb0;--mark:#ffe58a;--danger:#c0392b}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161d;--card:#1b222c;--text:#e6ebf2;--sub:#97a3b4;--line:#2c3644;--bub:#3f78ad;--mono:#222b37;--acc:#7db4ea;--mark:#6b5a1c}}
-:root[data-theme="dark"]{--bg:#12161d;--card:#1b222c;--text:#e6ebf2;--sub:#97a3b4;--line:#2c3644;--bub:#3f78ad;--mono:#222b37;--acc:#7db4ea;--mark:#6b5a1c}
+--bg:#eef3f8;--card:#fff;--text:#2b3344;--sub:#6b7686;--line:#d5dde8;--bub:#5c9ed6;--bubt:#fff;--mono:#7b8689;--gold:#c8a95a;--acc:#2f6fb0;--mark:#ffe58a;--danger:#c0392b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161d;--card:#1b222c;--text:#e6ebf2;--sub:#97a3b4;--line:#2c3644;--bub:#3f78ad;--mono:#59636a;--acc:#7db4ea;--mark:#6b5a1c}}
+:root[data-theme="dark"]{--bg:#12161d;--card:#1b222c;--text:#e6ebf2;--sub:#97a3b4;--line:#2c3644;--bub:#3f78ad;--mono:#59636a;--acc:#7db4ea;--mark:#6b5a1c}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;line-height:1.6}
@@ -42,7 +42,7 @@ button.dng{color:var(--danger);border-color:var(--danger)}
 .bub{position:relative;background:var(--bub);color:var(--bubt);border-radius:12px;padding:10px 14px;white-space:pre-wrap;word-break:break-word;font-weight:500}
 .bub::before{content:"";position:absolute;left:-8px;top:14px;border:6px solid transparent;border-right:8px solid var(--bub);border-left:0}
 .ln.mono{display:block;margin:14px 0}
-.ln.mono .bub{background:var(--mono);color:var(--text);border:1px solid var(--line);text-align:center;font-weight:400}
+.ln.mono .bub{background:var(--mono);color:#fff;border:0;text-align:center;font-weight:400}
 .ln.mono .bub::before{display:none}
 .ln.flash .bub{outline:3px solid var(--gold)}
 mark{background:var(--mark);color:inherit;border-radius:3px}
@@ -98,6 +98,7 @@ details summary{cursor:pointer;font-weight:700}
 <div class="card"><details id="ocrBox"><summary>画像から読み込み(文字起こし)</summary>
   <div class="row2" style="margin-top:8px"><button id="ocrPick">画像を選ぶ(複数可)</button><button id="ocrRun" class="pri" disabled>文字起こし</button></div>
   <label class="now" style="display:block;margin-top:6px"><input type="checkbox" id="ocrHd" checked> 章情報(章・話数・サブタイトル)も読み取る</label>
+  <label class="now" style="display:block;margin-top:6px">オレンジの吹き出し(あなたの発言)の名前 <input type="text" id="ocrMe" value="晶" style="width:7em"></label>
   <div class="now" id="ocrSt">ログ画面のスクショを選ぶか、貼り付け(Ctrl+V)してください。画像は端末内だけで処理されます。</div>
   <div id="ocrRes"></div>
 </details></div>
@@ -329,32 +330,65 @@ document.addEventListener('paste',e=>{const f=[...e.clipboardData.files].filter(
 async function loadImg(f){const b=await createImageBitmap(f),c=document.createElement('canvas');c.width=OW;c.height=Math.round(b.height*OW/b.width);c.getContext('2d',{willReadFrequently:true}).drawImage(b,0,0,c.width,c.height);return c}
 function findBubbles(c){
   const w=c.width,h=c.height,d=c.getContext('2d').getImageData(0,0,w,h).data;
-  const blue=i=>Math.abs(d[i]-62)<45&&Math.abs(d[i+1]-162)<45&&Math.abs(d[i+2]-221)<45;
-  const x0=Math.round(w*.18),x1=Math.round(w*.97),rows=[];
-  for(let y=0;y<h;y++){let n=0;for(let x=x0;x<x1;x++)if(blue((y*w+x)*4))n++;rows.push(n>w*.25)}
-  const bands=[];let s=-1,gap=0;
+  // 1:青(他キャラ) 2:オレンジ(あなた) 3:灰色(モノローグ)
+  const cls=i=>{const r=d[i],g=d[i+1],b=d[i+2];
+    if(Math.abs(r-62)<45&&Math.abs(g-162)<45&&Math.abs(b-221)<45)return 1;
+    if(Math.abs(r-218)<40&&Math.abs(g-158)<40&&Math.abs(b-46)<50)return 2;
+    if(Math.abs(r-122)<28&&Math.abs(g-133)<28&&Math.abs(b-135)<28)return 3;
+    return 0};
+  const T=new Uint8Array(w*h);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++)T[y*w+x]=cls((y*w+x)*4);
+  const x0=Math.round(w*.12),x1=Math.round(w*.97),rowT=[];
+  for(let y=0;y<h;y++){const n=[0,0,0,0];for(let x=x0;x<x1;x++)n[T[y*w+x]]++;let t=1;if(n[2]>n[t])t=2;if(n[3]>n[t])t=3;rowT.push(n[t]>w*.25?t:0)}
+  const bands=[];let cur=null,gap=0;
   for(let y=0;y<=h;y++){
-    if(y<h&&rows[y]){if(s<0)s=y;gap=0}
-    else if(s>=0){gap++;if(gap>8||y===h){bands.push([s,y-gap]);s=-1;gap=0}}
+    const t=y<h?rowT[y]:0;
+    if(cur){
+      if(t===cur.t){cur.b=y;gap=0;continue}
+      if(t===0&&y<h&&++gap<=8)continue;
+      bands.push(cur);cur=null;gap=0;
+    }
+    if(t)cur={t,s:y,b:y};
   }
   const res=[];
-  for(const [t,b] of bands){
-    const bh=b-t+1;if(bh<w*.055)continue;
-    let left=Math.round(w*.2);
-    for(let x=Math.round(w*.1);x<w;x++){let n=0;for(let y=t;y<=b;y++)if(blue((y*w+x)*4))n++;if(n>bh*.5){left=x;break}}
-    res.push({top:t,bot:b,left});
+  for(const bd of bands){
+    const t=bd.t,bh=bd.b-bd.s+1;if(bh<w*.055)continue;
+    let left=Math.round(w*.2),right=Math.round(w*.95);
+    const col=x=>{let n=0;for(let y=bd.s;y<=bd.b;y++)if(T[y*w+x]===t)n++;return n>bh*.5};
+    for(let x=Math.round(w*.05);x<w;x++)if(col(x)){left=x;break}
+    for(let x=w-1;x>left;x--)if(col(x)){right=x;break}
+    let lt=0,tot=0;
+    for(let y=bd.s;y<=bd.b;y++)for(let x=Math.round(w*.9);x<Math.round(w*.975);x++){const i=(y*w+x)*4;tot++;if(d[i]>215&&d[i+1]>215&&d[i+2]>215)lt++}
+    const btn=t!==3&&right>w*.93&&lt>tot*.1; // スピーカーボタンがある場合は手前まで
+    res.push({t,top:bd.s,bot:bd.b,left,tr:btn?w*.885:right-w*.02});
   }
   return res;
 }
+// 章情報: 最初の吹き出しより上の「白い帯」にある濃い文字の行(1行目=章/話数, 2行目=サブタイトル)を探す
+async function readHd(c,bs){
+  const w=c.width,d=c.getContext('2d').getImageData(0,0,w,c.height).data,lim=bs.length?bs[0].top:c.height;
+  const x0=Math.round(w*.1),x1=Math.round(w*.9),n=x1-x0,rows=[];
+  for(let y=0;y<lim;y++){let l=0,k=0;for(let x=x0;x<x1;x++){const i=(y*w+x)*4,v=.3*d[i]+.59*d[i+1]+.11*d[i+2];if(v>200)l++;else if(v<110)k++}rows.push(l>n*.55&&k>1)}
+  const gs=[];let s=-1,gap=0;
+  for(let y=0;y<=lim;y++){
+    if(y<lim&&rows[y]){if(s<0)s=y;gap=0}
+    else if(s>=0&&(++gap>4||y===lim)){gs.push([s,y-gap]);s=-1;gap=0}
+  }
+  const gg=gs.filter(g=>g[1]-g[0]>=w*.012);
+  if(!gg.length)return null;
+  const rd=async g=>{const cv=cropC(c,x0,g[0]-8,n,g[1]-g[0]+16,'hd');return cv?norm(await ocrRec(cv,'7')).replace(/\n/g,''):''};
+  return parseHd([await rd(gg[0]),gg[1]?await rd(gg[1]):''].join('\n'));
+}
+try{$('#ocrMe').value=localStorage.getItem('mo_me')||'晶'}catch(e){}
 function cropC(c,x,y,w,h,mode){
   x=Math.max(0,Math.round(x));y=Math.max(0,Math.round(y));w=Math.min(c.width-x,Math.round(w));h=Math.min(c.height-y,Math.round(h));
   if(w<5||h<5)return null;
-  const s=c.getContext('2d').getImageData(x,y,w,h).data,pad=24,th=mode==='hd'?110:140;
+  const s=c.getContext('2d').getImageData(x,y,w,h).data,pad=24,num=typeof mode==='number',th=mode==='hd'?110:140;
   const o=document.createElement('canvas');o.width=w+pad*2;o.height=h+pad*2;
   const ox=o.getContext('2d');ox.fillStyle='#fff';ox.fillRect(0,0,o.width,o.height);
   const out=ox.createImageData(w,h),t=out.data;
   for(let i=0;i<s.length;i+=4){
-    const v=mode==='text'?(s[i]>150?0:255):((.3*s[i]+.59*s[i+1]+.11*s[i+2])<th?0:255);
+    const v=num?(Math.min(s[i],s[i+1],s[i+2])>mode?0:255):((.3*s[i]+.59*s[i+1]+.11*s[i+2])<th?0:255);
     t[i]=t[i+1]=t[i+2]=v;t[i+3]=255;
   }
   ox.putImageData(out,pad,pad);return o;
@@ -384,22 +418,27 @@ function parseHd(t){
 }
 $('#ocrRun').onclick=async()=>{
   $('#ocrRun').disabled=true;
+  const useHd=$('#ocrHd').checked,me=$('#ocrMe').value.trim()||'晶';
+  try{localStorage.setItem('mo_me',me)}catch(e){}
   try{
     if(!oWorker){oSt('日本語モデルを読み込み中…(初回のみダウンロード)');oWorker=await Tesseract.createWorker('jpn')}
-    const useHd=$('#ocrHd').checked;let hd=null;const items=[];
+    let hd=null;const items=[];
     for(let k=0;k<oFiles.length;k++){
       const c=await loadImg(oFiles[k]),bs=findBubbles(c),cur=[];
-      if(useHd&&!(hd&&(hd.c||hd.ep))){const hc=cropC(c,OW*.1,OW*.375,OW*.8,OW*.155,'hd');if(hc)hd=parseHd(await ocrRec(hc,'6'))}
+      if(useHd&&!(hd&&(hd.c||hd.ep)))hd=await readHd(c,bs);
       for(let i=0;i<bs.length;i++){
         oSt(`画像 ${k+1}/${oFiles.length}・${i+1}/${bs.length} を認識中…`);
-        const b=bs[i],nm=cropC(c,b.left,b.top-OW*.052,OW*.45,OW*.04,'name'),tx=cropC(c,b.left+OW*.02,b.top+OW*.008,OW*.885-(b.left+OW*.02),b.bot-b.top-OW*.016,'text');
+        const b=bs[i],mono=b.t===3;
+        const nm=b.t===1?cropC(c,b.left,b.top-OW*.052,OW*.45,OW*.04,'name'):null;
+        const tx=cropC(c,b.left+OW*.02,b.top+OW*.008,b.tr-(b.left+OW*.02),b.bot-b.top-OW*.016,[0,155,150,188][b.t]);
         const raw=nm?norm(await ocrRec(nm,'7')).replace(/\n/g,''):'',text=tx?cleanT(await ocrRec(tx,'6')):'';
         if(!text)continue;
-        const m=matchChar(raw);cur.push({name:m?m.name:raw,text});
+        const m=b.t===1?matchChar(raw):null;
+        cur.push({name:mono?'':b.t===2?me:(m?m.name:raw),text,mono});
       }
       items.push(...cur.slice(ov(items,cur,x=>x.name)));
     }
-    R={hd:useHd?(hd||{c:'',ep:'',sub:''}):null,items:items.map(x=>({...x,on:1,sp:(S.chars.find(c=>c.name===x.name)||{}).id||(x.name?'__new:'+x.name:'mono')}))};
+    R={hd:useHd?(hd||{c:'',ep:'',sub:''}):null,items:items.map(x=>({...x,on:1,sp:x.mono?'mono':(S.chars.find(c=>c.name===x.name)||{}).id||(x.name?'__new:'+x.name:'mono')}))};
     renderR();oSt(`${items.length} 件を認識しました。内容を確認して「取り込む」を押してください。`);
   }catch(e){oSt('エラー: '+e.message)}
   $('#ocrRun').disabled=!oFiles.length;
