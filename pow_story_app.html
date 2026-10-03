@@ -64,6 +64,7 @@ details summary{cursor:pointer;font-weight:700}
 .ro .ch h2{font-size:20px}
 .oln{border-top:1px solid var(--line);padding:8px 0}.oln .r1{display:flex;gap:8px;align-items:center}.oln select{flex:1}.oln textarea{min-height:64px;margin-top:4px}
 .oimg{display:block;max-width:100%;margin-top:4px;border-radius:6px}
+.cfv{margin-top:4px;line-height:1.8;font-size:14px}.cfv .lo{background:rgba(232,116,59,.35);border-bottom:2px solid #e8743b;border-radius:3px}.oln.warn{border-left:3px solid #e8743b;padding-left:8px}
 </style>
 </head>
 <body>
@@ -100,7 +101,9 @@ details summary{cursor:pointer;font-weight:700}
   <div class="row2" style="margin-top:8px"><button id="ocrPick">画像を選ぶ(複数可)</button><button id="ocrRun" class="pri" disabled>文字起こし</button></div>
   <label class="now" style="display:block;margin-top:6px"><input type="checkbox" id="ocrHd" checked> 章情報(章・話数・サブタイトル)も読み取る</label>
   <label class="now" style="display:block;margin-top:6px">オレンジの吹き出し(あなたの発言)の名前 <input type="text" id="ocrMe" value="晶" style="width:7em"></label>
+  <label class="now" style="display:block;margin-top:6px">自信のない文字に色を付ける:自信度が <input type="number" id="ocrTh" value="80" min="0" max="100" style="width:4.5em"> 未満</label>
   <div class="now" id="ocrSt">ログ画面のスクショを選ぶか、貼り付け(Ctrl+V)してください。画像は端末内だけで処理されます。</div>
+  <details id="dictBox" style="margin-top:8px"><summary>用語辞典(ゲーム固有の言葉)</summary><p class="now">1行に1語。3文字以上で登録すると、読み取り結果の近い表記(1〜2文字違い)をこの形に自動で直します。キャラ名は自動で対象です。誤って直される語があれば削除してください。</p><textarea id="dictTa" rows="6" placeholder="賢者様&#10;魔法舎"></textarea></details>
   <details id="fixBox" style="margin-top:8px"><summary>学習した修正(自動で直す内容)</summary><div id="fixList"></div></details>
   <div id="ocrRes"></div>
 </details></div>
@@ -148,6 +151,7 @@ details summary{cursor:pointer;font-weight:700}
     </div>
   </div>
   <div class="card ro" id="pBody"></div>
+  <div class="card"><div class="row2"><button id="pPrev2" aria-label="前の章">‹</button><select id="pSel2" aria-label="章を選ぶ(下部)"></select><button id="pNext2" aria-label="次の章">›</button></div></div>
 </div>
 </main>
 <input type="file" id="file" accept="image/*" class="hid">
@@ -243,6 +247,7 @@ function renderPrev(){
   const i=S.chapters.findIndex(c=>c.id===S.cur),ch=chap();
   $('#pSel').innerHTML=S.chapters.map(c=>`<option value="${c.id}"${c.id===S.cur?' selected':''}>${esc(unitName(c))}</option>`).join('');
   $('#pPrev').disabled=i<=0;$('#pNext').disabled=i>=S.chapters.length-1;
+  $('#pSel2').innerHTML=$('#pSel').innerHTML;$('#pPrev2').disabled=i<=0;$('#pNext2').disabled=i>=S.chapters.length-1;
   const sr=searchHTML();$('#pBody').innerHTML=sr!==null?sr:`${headHTML(ch)}`+(ch.lines.length?ch.lines.map(l=>lineHTML(l,'','ro')).join(''):'<div class="empty">この章はまだ空です</div>');
 }
 function render(){renderTop();renderView();renderChars();renderPrev()}
@@ -306,7 +311,7 @@ $('#imp').onclick=()=>{
   try{const d=JSON.parse($('#bk').value);if(!d.chapters||!d.chapters.length||!d.chars)throw 0;S=d;migrate();newC=newCt=false;if(!S.cur||!chap())S.cur=S.chapters[0].id;save();spk='mono';editing=null;render();$('#bkmsg').textContent='読み込みました。'}
   catch(e){$('#bkmsg').textContent='読み込めませんでした。書き出したデータをそのまま貼り付けてください。'}
 };
-let edOpen=true;
+let edOpen=false;
 function applyEd(){$('#edBody').classList.toggle('hid',!edOpen);$('#tgEd').textContent=edOpen?'折りたたむ':'開く'}
 $('#tgEd').onclick=()=>{edOpen=!edOpen;applyEd()};
 function setMode(m){
@@ -318,6 +323,9 @@ $('#tEdit').onclick=()=>setMode('edit');
 $('#tPrev').onclick=()=>setMode('prev');
 function goCh(id){newC=newCt=false;S.cur=id;editing=null;$('#txt').value='';save();render();scrollTo(0,0)}
 $('#pSel').onchange=e=>goCh(e.target.value);
+$('#pSel2').onchange=e=>goCh(e.target.value);
+$('#pPrev2').onclick=()=>$('#pPrev').click();
+$('#pNext2').onclick=()=>$('#pNext').click();
 $('#pPrev').onclick=()=>{const i=S.chapters.findIndex(c=>c.id===S.cur);if(i>0)goCh(S.chapters[i-1].id)};
 $('#pNext').onclick=()=>{const i=S.chapters.findIndex(c=>c.id===S.cur);if(i<S.chapters.length-1)goCh(S.chapters[i+1].id)};
 let sOpen=true;
@@ -463,6 +471,57 @@ function renderFix(){
 $('#fixBox').addEventListener('toggle',renderFix);
 $('#fixList').addEventListener('click',e=>{const i=e.target.dataset.fx;if(i===undefined)return;fixes().splice(+i,1);save();renderFix()});
 
+/* ===== 自信度の色付き表示・用語辞典 ===== */
+const th=()=>+$('#ocrTh').value||80;
+try{$('#ocrTh').value=localStorage.getItem('mo_th')||80}catch(e){}
+$('#ocrTh').addEventListener('change',()=>{try{localStorage.setItem('mo_th',$('#ocrTh').value)}catch(e){}if(R)renderR()});
+// 文字列 r(各文字の自信度 cf)を c に直したとき、変わらなかった文字だけ自信度を引き継ぐ(直した文字は100=疑わしくない)
+function alignConf(r,cf,c){
+  const n=r.length,m=c.length,D=[...Array(n+1)].map(()=>new Array(m+1).fill(0));
+  for(let i=0;i<=n;i++)D[i][0]=i;for(let j=0;j<=m;j++)D[0][j]=j;
+  for(let i=1;i<=n;i++)for(let j=1;j<=m;j++)D[i][j]=Math.min(D[i-1][j]+1,D[i][j-1]+1,D[i-1][j-1]+(r[i-1]===c[j-1]?0:1));
+  const out=new Array(m).fill(100);let i=n,j=m;
+  while(j>0){
+    if(i>0&&D[i][j]===D[i-1][j-1]+(r[i-1]===c[j-1]?0:1)){if(r[i-1]===c[j-1])out[j-1]=cf[i-1]??100;i--;j--}
+    else if(i>0&&D[i][j]===D[i-1][j]+1)i--;
+    else j--;
+  }
+  return out;
+}
+const cfHtml=(t,cf,x)=>t.split('').map((ch,k)=>{const e=ch==='\n'?'<br>':esc(ch);return (cf[k]??100)<x?`<span class="lo">${e}</span>`:e}).join('');
+async function ocrLines(cv){
+  await oWorker.setParameters({tessedit_pageseg_mode:'6'});
+  const d=(await oWorker.recognize(cv)).data,lns=[];
+  (d.blocks||[]).forEach(b=>(b.paragraphs||[]).forEach(p=>(p.lines||[]).forEach(l=>lns.push(l))));
+  const ls=[];
+  for(const ln of (lns.length?lns:(d.lines||[]))){
+    const syms=[];
+    for(const w of (ln.words||[])){
+      if(w.symbols&&w.symbols.length){for(const s of w.symbols)syms.push([s.text,s.confidence])}
+      else{for(const ch of (w.text||''))syms.push([ch,w.confidence])}
+    }
+    const raw=syms.map(s=>s[0]).join(''),cf=[];
+    syms.forEach(s=>{for(let q=0;q<s[0].length;q++)cf.push(s[1])});
+    const t=norm(raw);if(!t)continue;
+    ls.push({t,cf:alignConf(raw,cf,t)});
+  }
+  if(!ls.length)return{t:cleanT(d.text||''),cf:[]};
+  return{t:ls.map(l=>l.t).join('\n'),cf:ls.flatMap((l,i)=>i?[100,...l.cf]:l.cf)};
+}
+const dictTerms=()=>[...new Set([...(S.dict||[]),...S.chars.map(c=>c.name)])].filter(t=>t.length>=3).sort((a,b)=>b.length-a.length);
+function applyDict(text){
+  for(const t of dictTerms()){
+    const L=t.length,tol=L>=8?2:1;
+    for(let i=0;i+L<=text.length;){
+      const w=text.slice(i,i+L);
+      if(w!==t&&!w.includes('\n')&&lev(w,t)<=tol){text=text.slice(0,i)+t+text.slice(i+L);i+=L}else i++;
+    }
+  }
+  return text;
+}
+$('#dictBox').addEventListener('toggle',()=>{$('#dictTa').value=(S.dict||[]).join('\n')});
+$('#dictTa').addEventListener('change',e=>{S.dict=e.target.value.split('\n').map(x=>x.trim()).filter(Boolean);save()});
+
 $('#ocrRun').onclick=async()=>{
   $('#ocrRun').disabled=true;
   const useHd=$('#ocrHd').checked,me=$('#ocrMe').value.trim()||'晶';
@@ -478,15 +537,15 @@ $('#ocrRun').onclick=async()=>{
         const b=bs[i],mono=b.t===3;
         const nm=b.t===1?cropC(c,b.left,b.top-OW*.052,OW*.45,OW*.04,'name'):null;
         const tx=cropC(c,b.left+OW*.02,b.top+OW*.008,b.tr-(b.left+OW*.02),b.bot-b.top-OW*.016,[0,155,150,188][b.t]);
-        const raw=nm?norm(await ocrRec(nm,'7')).replace(/\n/g,''):'',rawT=tx?cleanT(await ocrRec(tx,'6')):'';
+        const raw=nm?norm(await ocrRec(nm,'7')).replace(/\n/g,''):'',rl=tx?await ocrLines(tx):{t:'',cf:[]},rawT=rl.t;
         if(!rawT)continue;
-        const al=fixes().find(x=>x.t==='n'&&x.a===raw),rn=al?al.b:raw,m=b.t===1?matchChar(rn):null,ny=b.t===1?OW*.052:0;
-        cur.push({name:mono?'':b.t===2?me:(m?m.name:rn),text:applyFix(rawT),orig:rawT,rawName:raw,mono,img:thumb(c,b.left,b.top-ny,b.tr-b.left,b.bot-b.top+ny)});
+        const al=fixes().find(x=>x.t==='n'&&x.a===raw),rn=al?al.b:raw,m=b.t===1?matchChar(rn):null,ny=b.t===1?OW*.052:0,fx=applyDict(applyFix(rawT));
+        cur.push({name:mono?'':b.t===2?me:(m?m.name:rn),text:fx,base:fx,cf:alignConf(rawT,rl.cf,fx),orig:rawT,rawName:raw,mono,img:thumb(c,b.left,b.top-ny,b.tr-b.left,b.bot-b.top+ny)});
       }
       items.push(...cur.slice(ov(items,cur,x=>x.name)));
     }
     R={hd:useHd?(hd||{c:'',ep:'',sub:''}):null,items:items.map(x=>({...x,on:1,sp:x.mono?'mono':(S.chars.find(c=>c.name===x.name)||{}).id||(x.name?'__new:'+x.name:'mono')}))};
-    renderR();oSt(`${items.length} 件を認識しました。内容を確認して「取り込む」を押してください。`);
+    renderR();const lo=R.items.reduce((a,it)=>a+(it.cf||[]).filter(v=>v<th()).length,0);oSt(`${items.length} 件を認識しました。色付きの文字(${lo}個)を中心に確認して「取り込む」を押してください。`);
   }catch(e){oSt('エラー: '+e.message)}
   $('#ocrRun').disabled=!oFiles.length;
 };
@@ -494,10 +553,10 @@ function renderR(){
   const el=$('#ocrRes');if(!R){el.innerHTML='';return}
   const h=R.hd;
   el.innerHTML=(h?`<div class="fld"><label>章情報</label><input type="text" id="hC" value="${esc(h.c)}" placeholder="章"><input type="text" id="hEp" value="${esc(h.ep)}" placeholder="話数"></div><div class="fld"><label>サブタイトル</label><input type="text" id="hSub" value="${esc(h.sub)}"></div>`:'')+
-  R.items.map((it,i)=>`<div class="oln"><div class="r1"><input type="checkbox" data-o="on" data-i="${i}"${it.on?' checked':''}><select data-o="sp" data-i="${i}"><option value="mono">モノローグ</option>${S.chars.map(c=>`<option value="${c.id}"${it.sp===c.id?' selected':''}>${esc(c.name)}</option>`).join('')}${it.name&&!S.chars.some(c=>c.name===it.name)?`<option value="__new:${esc(it.name)}"${it.sp.startsWith('__new:')?' selected':''}>＋新規キャラ「${esc(it.name)}」</option>`:''}</select></div>${it.img?`<img class="oimg" src="${it.img}">`:''}<textarea data-o="tx" data-i="${i}">${esc(it.text)}</textarea></div>`).join('')+
+  R.items.map((it,i)=>`<div class="oln${(it.cur||it.cf||[]).some(v=>v<th())?' warn':''}"><div class="r1"><input type="checkbox" data-o="on" data-i="${i}"${it.on?' checked':''}><select data-o="sp" data-i="${i}"><option value="mono">モノローグ</option>${S.chars.map(c=>`<option value="${c.id}"${it.sp===c.id?' selected':''}>${esc(c.name)}</option>`).join('')}${it.name&&!S.chars.some(c=>c.name===it.name)?`<option value="__new:${esc(it.name)}"${it.sp.startsWith('__new:')?' selected':''}>＋新規キャラ「${esc(it.name)}」</option>`:''}</select></div>${it.img?`<img class="oimg" src="${it.img}">`:''}<div class="cfv">${cfHtml(it.text,it.cur||it.cf||[],th())}</div><textarea data-o="tx" data-i="${i}">${esc(it.text)}</textarea></div>`).join('')+
   `<div class="row2" style="margin-top:8px"><button id="ocrDrop" class="dng">破棄</button><button id="ocrGo" class="pri">取り込む</button></div>`;
 }
-$('#ocrRes').addEventListener('input',e=>{const t=e.target;if(R&&t.dataset.o==='tx')R.items[t.dataset.i].text=t.value});
+$('#ocrRes').addEventListener('input',e=>{const t=e.target;if(!R||t.dataset.o!=='tx')return;const it=R.items[t.dataset.i];it.text=t.value;it.cur=alignConf(it.base||'',it.cf||[],t.value);const pv=t.parentNode.querySelector('.cfv');if(pv)pv.innerHTML=cfHtml(t.value,it.cur,th())});
 $('#ocrRes').addEventListener('change',e=>{const t=e.target,o=t.dataset.o;if(!R||!o)return;if(o==='on')R.items[t.dataset.i].on=t.checked;else if(o==='sp')R.items[t.dataset.i].sp=t.value});
 $('#ocrRes').addEventListener('click',e=>{if(e.target.id==='ocrDrop'){R=null;renderR();oSt('')}else if(e.target.id==='ocrGo')ocrCommit()});
 // 同じ章・話数があればその話へ、現在の話が空ならそこへ、それ以外は新しい話を作って反映
@@ -546,6 +605,7 @@ $('#bkFile').onchange=async e=>{
   }catch(err){$('#bkmsg').textContent='読み込めませんでした。書き出したファイルを選んでください。'}
 };
 
+applyEd();
 render();
 </script>
 </body>
